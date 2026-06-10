@@ -1,0 +1,38 @@
+<div class="page-container">
+  <h1 class="page-title">Cards Management</h1>
+  <div class="section">
+    <h2>Issue New Card</h2>
+    <form (ngSubmit)="issueCard()" class="form-grid">
+      <input [(ngModel)]="newCard.customerId" name="customerId" placeholder="Customer ID" type="number" required />
+      <input [(ngModel)]="newCard.cardHolderName" name="holder" placeholder="Card Holder Name" required />
+      <select [(ngModel)]="newCard.cardType" name="type">
+        <option value="CREDIT_CARD">Credit Card</option>
+        <option value="DEBIT_CARD">Debit Card</option>
+        <option value="PREPAID_CARD">Prepaid Card</option>
+        <option value="FOREX_CARD">Forex Card</option>
+      </select>
+      <button type="submit" class="btn-primary">Issue Card</button>
+    </form>
+
+    <table class="data-table">
+      <thead><tr><th>Card Number</th><th>Holder</th><th>Type</th><th>Network</th><th>Credit Limit</th><th>Available</th><th>Status</th><th>Actions</th></tr></thead>
+      <tbody>
+        @for (c of cards; track c.id) {
+          <tr>
+            <td>{{ c.cardNumber }}</td>
+            <td>{{ c.cardHolderName }}</td>
+            <td><span class="badge">{{ c.cardType }}</span></td>
+            <td>{{ c.cardNetwork }}</td>
+            <td class="amount">{{ c.creditLimit | currency:'INR' }}</td>
+            <td class="amount">{{ c.availableLimit | currency:'INR' }}</td>
+            <td><span class="status" [class]="c.status?.toLowerCase()">{{ c.status }}</span></td>
+            <td>
+              @if (c.status === 'ACTIVE') { <button class="btn-danger btn-sm" (click)="blockCard(c.id!)">Block</button> }
+              @if (c.status === 'BLOCKED') { <button class="btn-success" (click)="activateCard(c.id!)">Activate</button> }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>

@@ -1,0 +1,54 @@
+server:
+  port: 8072
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+      routes:
+        - id: accounts-service
+          uri: lb://ACCOUNTS-SERVICE
+          predicates:
+            - Path=/api/accounts/**
+        - id: deposits-service
+          uri: lb://DEPOSITS-SERVICE
+          predicates:
+            - Path=/api/deposits/**
+        - id: cards-service
+          uri: lb://CARDS-SERVICE
+          predicates:
+            - Path=/api/cards/**
+        - id: loans-service
+          uri: lb://LOANS-SERVICE
+          predicates:
+            - Path=/api/loans/**
+        - id: investments-service
+          uri: lb://INVESTMENTS-SERVICE
+          predicates:
+            - Path=/api/investments/**
+        - id: insurance-service
+          uri: lb://INSURANCE-SERVICE
+          predicates:
+            - Path=/api/insurance/**
+        - id: payments-service
+          uri: lb://PAYMENTS-SERVICE
+          predicates:
+            - Path=/api/payments/**
+
+eureka:
+  instance:
+    prefer-ip-address: true
+  client:
+    service-url:
+      defaultZone: http://localhost:8070/eureka/
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"

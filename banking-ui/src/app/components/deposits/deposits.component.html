@@ -1,0 +1,36 @@
+<div class="page-container">
+  <h1 class="page-title">Deposits Management</h1>
+  <div class="section">
+    <h2>Create Deposit</h2>
+    <form (ngSubmit)="createDeposit()" class="form-grid">
+      <input [(ngModel)]="newDeposit.customerId" name="customerId" placeholder="Customer ID" type="number" required />
+      <input [(ngModel)]="newDeposit.accountNumber" name="account" placeholder="Account Number" required />
+      <select [(ngModel)]="newDeposit.depositType" name="type">
+        <option value="FIXED_DEPOSIT">Fixed Deposit</option>
+        <option value="RECURRING_DEPOSIT">Recurring Deposit</option>
+        <option value="TAX_SAVING_FD">Tax Saving FD</option>
+      </select>
+      <input [(ngModel)]="newDeposit.principalAmount" name="amount" placeholder="Amount" type="number" required />
+      <input [(ngModel)]="newDeposit.tenureMonths" name="tenure" placeholder="Tenure (months)" type="number" required />
+      <button type="submit" class="btn-primary">Create Deposit</button>
+    </form>
+
+    <table class="data-table">
+      <thead><tr><th>Deposit No</th><th>Type</th><th>Principal</th><th>Interest %</th><th>Tenure</th><th>Maturity</th><th>Status</th><th>Actions</th></tr></thead>
+      <tbody>
+        @for (d of deposits; track d.id) {
+          <tr>
+            <td>{{ d.depositNumber }}</td>
+            <td><span class="badge">{{ d.depositType }}</span></td>
+            <td class="amount">{{ d.principalAmount | currency:'INR' }}</td>
+            <td>{{ d.interestRate }}%</td>
+            <td>{{ d.tenureMonths }} months</td>
+            <td class="amount">{{ d.maturityAmount | currency:'INR' }}</td>
+            <td><span class="status" [class]="d.status?.toLowerCase()">{{ d.status }}</span></td>
+            <td><button class="btn-danger btn-sm" (click)="closeDeposit(d.id!)">Close</button></td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>

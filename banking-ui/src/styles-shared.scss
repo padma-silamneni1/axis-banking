@@ -1,0 +1,34 @@
+.page-container { max-width: 1200px; margin: 0 auto; }
+.page-title { font-size: 24px; font-weight: 700; color: #333; margin-bottom: 20px; }
+.tabs { display: flex; gap: 8px; margin-bottom: 24px;
+  button { padding: 8px 20px; border: 2px solid #ddd; background: white; border-radius: 6px; cursor: pointer; font-weight: 500;
+    &.active { border-color: #97144d; color: #97144d; background: #fef0f5; }
+  }
+}
+.section { background: white; border-radius: 12px; padding: 24px; margin-bottom: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  h2 { font-size: 18px; margin-bottom: 16px; }
+}
+.form-grid { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 24px;
+  input, select { padding: 10px 14px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; min-width: 180px;
+    &:focus { outline: none; border-color: #97144d; }
+  }
+}
+.btn-primary { padding: 10px 24px; background: #97144d; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;
+  &:hover { background: #7b0f3f; }
+}
+.btn-danger { padding: 6px 16px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer;
+  &.btn-sm { padding: 4px 12px; font-size: 12px; }
+}
+.btn-success { padding: 6px 16px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; }
+.data-table { width: 100%; border-collapse: collapse;
+  th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; font-size: 14px; }
+  th { font-weight: 600; color: #666; background: #fafafa; }
+  tbody tr:hover { background: #fef0f5; }
+}
+.badge { background: #e8e8e8; padding: 3px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+.status { padding: 3px 10px; border-radius: 12px; font-size: 12px; font-weight: 600;
+  &.active { background: #d4edda; color: #155724; }
+  &.closed, &.cancelled { background: #f8d7da; color: #721c24; }
+  &.blocked { background: #fff3cd; color: #856404; }
+}
+.amount { font-weight: 600; color: #2e7d32; }

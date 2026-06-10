@@ -1,0 +1,42 @@
+.sidebar {
+  width: 220px;
+  background: white;
+  box-shadow: 2px 0 8px rgba(0,0,0,0.08);
+  padding: 16px 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 24px;
+  color: #333;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s;
+  border-left: 3px solid transparent;
+
+  &:hover {
+    background: #f8f0f4;
+    color: #97144d;
+  }
+
+  &.active {
+    background: #f8f0f4;
+    color: #97144d;
+    border-left-color: #97144d;
+    font-weight: 600;
+  }
+}
+
+.material-icon {
+  font-family: 'Material Icons';
+  font-size: 20px;
+}
+
+.menu-label {
+  font-size: 14px;
+}
