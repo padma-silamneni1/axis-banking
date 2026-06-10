@@ -1,0 +1,105 @@
+{
+  "LoadBalancerName": "axis-banking-alb",
+  "Type": "application",
+  "Scheme": "internet-facing",
+  "IpAddressType": "ipv4",
+  "Subnets": ["subnet-public-1a", "subnet-public-1b", "subnet-public-1c"],
+  "SecurityGroups": ["sg-alb-axis-banking"],
+  "Listeners": [
+    {
+      "Protocol": "HTTPS",
+      "Port": 443,
+      "SslPolicy": "ELBSecurityPolicy-TLS13-1-2-2021-06",
+      "Certificates": [
+        {
+          "CertificateArn": "arn:aws:acm:ap-south-1:ACCOUNT_ID:certificate/CERTIFICATE_ID"
+        }
+      ],
+      "DefaultActions": [
+        {
+          "Type": "forward",
+          "TargetGroupArn": "arn:aws:elasticloadbalancing:ap-south-1:ACCOUNT_ID:targetgroup/axis-api-gateway/TARGET_GROUP_ID"
+        }
+      ]
+    },
+    {
+      "Protocol": "HTTP",
+      "Port": 80,
+      "DefaultActions": [
+        {
+          "Type": "redirect",
+          "RedirectConfig": {
+            "Protocol": "HTTPS",
+            "Port": "443",
+            "StatusCode": "HTTP_301"
+          }
+        }
+      ]
+    }
+  ],
+  "TargetGroups": [
+    {
+      "Name": "axis-api-gateway",
+      "Protocol": "HTTP",
+      "Port": 8072,
+      "VpcId": "vpc-axis-banking",
+      "HealthCheckPath": "/actuator/health",
+      "HealthCheckIntervalSeconds": 30,
+      "HealthyThresholdCount": 2,
+      "UnhealthyThresholdCount": 3,
+      "TargetType": "ip",
+      "DeregistrationDelay": 30,
+      "Stickiness": {
+        "Enabled": true,
+        "Type": "lb_cookie",
+        "DurationSeconds": 3600
+      }
+    },
+    {
+      "Name": "axis-eureka-server",
+      "Protocol": "HTTP",
+      "Port": 8070,
+      "VpcId": "vpc-axis-banking",
+      "HealthCheckPath": "/actuator/health",
+      "TargetType": "ip"
+    }
+  ],
+  "WAFv2": {
+    "WebACLArn": "arn:aws:wafv2:ap-south-1:ACCOUNT_ID:regional/webacl/axis-banking-waf/WAF_ID",
+    "Rules": [
+      {
+        "Name": "RateLimit",
+        "Priority": 1,
+        "Action": { "Block": {} },
+        "Statement": {
+          "RateBasedStatement": {
+            "Limit": 2000,
+            "AggregateKeyType": "IP"
+          }
+        }
+      },
+      {
+        "Name": "AWSManagedRulesCommonRuleSet",
+        "Priority": 2,
+        "OverrideAction": { "None": {} },
+        "Statement": {
+          "ManagedRuleGroupStatement": {
+            "VendorName": "AWS",
+            "Name": "AWSManagedRulesCommonRuleSet"
+          }
+        }
+      },
+      {
+        "Name": "AWSManagedRulesSQLiRuleSet",
+        "Priority": 3,
+        "OverrideAction": { "None": {} },
+        "Statement": {
+          "ManagedRuleGroupStatement": {
+            "VendorName": "AWS",
+            "Name": "AWSManagedRulesSQLiRuleSet"
+          }
+        }
+      }
+    ]
+  }
+}
