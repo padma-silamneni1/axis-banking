@@ -1,0 +1,77 @@
+{
+  "Comment": "Axis Banking Platform - CloudFront CDN Distribution",
+  "Origins": {
+    "Quantity": 2,
+    "Items": [
+      {
+        "Id": "S3-angular-frontend",
+        "DomainName": "axis-banking-frontend.s3.ap-south-1.amazonaws.com",
+        "S3OriginConfig": {
+          "OriginAccessIdentity": "origin-access-identity/cloudfront/EXAMPLE"
+        }
+      },
+      {
+        "Id": "ALB-api-gateway",
+        "DomainName": "axis-banking-alb.ap-south-1.elb.amazonaws.com",
+        "CustomOriginConfig": {
+          "HTTPPort": 8072,
+          "OriginProtocolPolicy": "http-only",
+          "OriginReadTimeout": 30,
+          "OriginKeepaliveTimeout": 5
+        }
+      }
+    ]
+  },
+  "DefaultCacheBehavior": {
+    "TargetOriginId": "S3-angular-frontend",
+    "ViewerProtocolPolicy": "redirect-to-https",
+    "AllowedMethods": ["GET", "HEAD", "OPTIONS"],
+    "CachedMethods": ["GET", "HEAD"],
+    "Compress": true,
+    "DefaultTTL": 86400,
+    "MaxTTL": 31536000,
+    "MinTTL": 0,
+    "ForwardedValues": {
+      "QueryString": false,
+      "Cookies": { "Forward": "none" }
+    }
+  },
+  "CacheBehaviors": {
+    "Quantity": 1,
+    "Items": [
+      {
+        "PathPattern": "/api/*",
+        "TargetOriginId": "ALB-api-gateway",
+        "ViewerProtocolPolicy": "https-only",
+        "AllowedMethods": ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"],
+        "CachedMethods": ["GET", "HEAD"],
+        "DefaultTTL": 0,
+        "MaxTTL": 0,
+        "MinTTL": 0,
+        "ForwardedValues": {
+          "QueryString": true,
+          "Headers": {
+            "Quantity": 3,
+            "Items": ["Authorization", "Content-Type", "Accept"]
+          },
+          "Cookies": { "Forward": "none" }
+        }
+      }
+    ]
+  },
+  "DefaultRootObject": "index.html",
+  "CustomErrorResponses": {
+    "Quantity": 1,
+    "Items": [
+      {
+        "ErrorCode": 404,
+        "ResponsePagePath": "/index.html",
+        "ResponseCode": "200",
+        "ErrorCachingMinTTL": 300
+      }
+    ]
+  },
+  "PriceClass": "PriceClass_200",
+  "Enabled": true,
+  "HttpVersion": "http2and3"
+}

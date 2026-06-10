@@ -1,0 +1,76 @@
+{
+  "Comment": "Axis Banking Platform - Route 53 DNS Configuration",
+  "HostedZone": {
+    "Name": "axisbanking.example.com",
+    "Config": {
+      "Comment": "DNS zone for Axis Banking microservices platform"
+    }
+  },
+  "RecordSets": [
+    {
+      "Name": "api.axisbanking.example.com",
+      "Type": "A",
+      "AliasTarget": {
+        "HostedZoneId": "Z35SXDOTRQ7X7K",
+        "DNSName": "axis-banking-alb.ap-south-1.elb.amazonaws.com",
+        "EvaluateTargetHealth": true
+      },
+      "Comment": "API Gateway ALB endpoint"
+    },
+    {
+      "Name": "app.axisbanking.example.com",
+      "Type": "A",
+      "AliasTarget": {
+        "HostedZoneId": "Z2FDTNDATAQYW2",
+        "DNSName": "d1234567890.cloudfront.net",
+        "EvaluateTargetHealth": false
+      },
+      "Comment": "CloudFront CDN for Angular frontend"
+    },
+    {
+      "Name": "eureka.axisbanking.example.com",
+      "Type": "A",
+      "AliasTarget": {
+        "HostedZoneId": "Z35SXDOTRQ7X7K",
+        "DNSName": "axis-eureka-alb.ap-south-1.elb.amazonaws.com",
+        "EvaluateTargetHealth": true
+      },
+      "Comment": "Eureka service discovery internal endpoint"
+    },
+    {
+      "Name": "redis.axisbanking.example.com",
+      "Type": "CNAME",
+      "TTL": 300,
+      "ResourceRecords": [
+        {
+          "Value": "axis-banking-redis.abc123.0001.aps1.cache.amazonaws.com"
+        }
+      ],
+      "Comment": "ElastiCache Redis endpoint"
+    },
+    {
+      "Name": "kafka.axisbanking.example.com",
+      "Type": "CNAME",
+      "TTL": 300,
+      "ResourceRecords": [
+        {
+          "Value": "b-1.axisbanking.abc123.c1.kafka.ap-south-1.amazonaws.com"
+        }
+      ],
+      "Comment": "Amazon MSK bootstrap broker"
+    }
+  ],
+  "HealthChecks": [
+    {
+      "CallerReference": "api-gateway-health",
+      "HealthCheckConfig": {
+        "FullyQualifiedDomainName": "api.axisbanking.example.com",
+        "Port": 443,
+        "Type": "HTTPS",
+        "ResourcePath": "/actuator/health",
+        "RequestInterval": 30,
+        "FailureThreshold": 3
+      }
+    }
+  ]
+}

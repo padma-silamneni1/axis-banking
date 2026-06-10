@@ -1,27 +1,39 @@
 package com.axisbanking.loans.service.impl;
 
+import com.axisbanking.common.event.EventPublisher;
+import com.axisbanking.common.event.EventType;
+import com.axisbanking.common.event.KafkaTopics;
 import com.axisbanking.loans.dto.LoanDto;
 import com.axisbanking.loans.exception.ResourceNotFoundException;
 import com.axisbanking.loans.model.*;
 import com.axisbanking.loans.repository.LoanRepository;
 import com.axisbanking.loans.service.LoanService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class LoanServiceImpl implements LoanService {
 
     private final LoanRepository loanRepository;
+    private final EventPublisher eventPublisher;
 
     @Override
+    @CacheEvict(value = "loansByCustomer", allEntries = true)
     public LoanDto applyForLoan(LoanDto dto) {
         LoanType type = LoanType.valueOf(dto.getLoanType());
         BigDecimal interestRate = getInterestRate(type);
@@ -43,22 +55,37 @@ public class LoanServiceImpl implements LoanService {
                 .status(LoanStatus.APPLIED)
                 .build();
 
-        return mapToDto(loanRepository.save(loan));
+        Loan saved = loanRepository.save(loan);
+
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("loanNumber", saved.getLoanNumber());
+        payload.put("customerId", saved.getCustomerId());
+        payload.put("loanType", type.name());
+        payload.put("loanAmount", saved.getLoanAmount());
+        payload.put("emiAmount", saved.getEmiAmount());
+        eventPublisher.publish(KafkaTopics.LOAN_EVENTS, EventType.LOAN_APPLIED,
+                saved.getId().toString(), "Loan", "APPLY", payload);
+
+        log.info("Loan applied: {} type: {} amount: {}", saved.getLoanNumber(), type, saved.getLoanAmount());
+        return mapToDto(saved);
     }
 
     @Override
+    @Cacheable(value = "loans", key = "#id")
     public LoanDto getLoanById(Long id) {
         return mapToDto(loanRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Loan", "id", id.toString())));
     }
 
     @Override
+    @Cacheable(value = "loans", key = "'num:' + #loanNumber")
     public LoanDto getLoanByNumber(String loanNumber) {
         return mapToDto(loanRepository.findByLoanNumber(loanNumber)
                 .orElseThrow(() -> new ResourceNotFoundException("Loan", "loanNumber", loanNumber)));
     }
 
     @Override
+    @Cacheable(value = "loansByCustomer", key = "#customerId")
     public List<LoanDto> getLoansByCustomerId(Long customerId) {
         return loanRepository.findByCustomerId(customerId).stream()
                 .map(this::mapToDto).collect(Collectors.toList());
@@ -70,24 +97,45 @@ public class LoanServiceImpl implements LoanService {
     }
 
     @Override
+    @CachePut(value = "loans", key = "#id")
+    @CacheEvict(value = "loansByCustomer", allEntries = true)
     public LoanDto approveLoan(Long id) {
         Loan loan = loanRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Loan", "id", id.toString()));
         loan.setStatus(LoanStatus.APPROVED);
         loan.setDisbursementDate(LocalDate.now());
-        return mapToDto(loanRepository.save(loan));
+        Loan saved = loanRepository.save(loan);
+
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("loanNumber", saved.getLoanNumber());
+        payload.put("status", "APPROVED");
+        eventPublisher.publish(KafkaTopics.LOAN_EVENTS, EventType.LOAN_APPROVED,
+                id.toString(), "Loan", "APPROVE", payload);
+
+        return mapToDto(saved);
     }
 
     @Override
+    @CachePut(value = "loans", key = "#id")
+    @CacheEvict(value = "loansByCustomer", allEntries = true)
     public LoanDto closeLoan(Long id) {
         Loan loan = loanRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Loan", "id", id.toString()));
         loan.setStatus(LoanStatus.CLOSED);
         loan.setOutstandingAmount(BigDecimal.ZERO);
-        return mapToDto(loanRepository.save(loan));
+        Loan saved = loanRepository.save(loan);
+
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("loanNumber", saved.getLoanNumber());
+        payload.put("status", "CLOSED");
+        eventPublisher.publish(KafkaTopics.LOAN_EVENTS, EventType.LOAN_CLOSED,
+                id.toString(), "Loan", "CLOSE", payload);
+
+        return mapToDto(saved);
     }
 
     @Override
+    @CacheEvict(value = {"loans", "loansByCustomer"}, allEntries = true)
     public void deleteLoan(Long id) {
         Loan loan = loanRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Loan", "id", id.toString()));

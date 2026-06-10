@@ -30,7 +30,36 @@
   font-weight: 500;
 }
 
+.navbar-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .welcome-text {
   font-size: 14px;
   opacity: 0.9;
+}
+
+.role-badge {
+  font-size: 11px;
+  background: rgba(255,255,255,0.2);
+  padding: 2px 8px;
+  border-radius: 10px;
+  text-transform: uppercase;
+}
+
+.logout-btn {
+  padding: 6px 16px;
+  background: rgba(255,255,255,0.15);
+  color: white;
+  border: 1px solid rgba(255,255,255,0.3);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: background 0.3s;
+
+  &:hover {
+    background: rgba(255,255,255,0.25);
+  }
 }

@@ -1,0 +1,43 @@
+{
+  "family": "axis-banking-services",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "512",
+  "memory": "1024",
+  "executionRoleArn": "arn:aws:iam::ACCOUNT_ID:role/ecsTaskExecutionRole",
+  "taskRoleArn": "arn:aws:iam::ACCOUNT_ID:role/axisbankingTaskRole",
+  "containerDefinitions": [
+    {
+      "name": "api-gateway",
+      "image": "ACCOUNT_ID.dkr.ecr.ap-south-1.amazonaws.com/axis-banking/api-gateway:latest",
+      "essential": true,
+      "portMappings": [
+        { "containerPort": 8072, "protocol": "tcp" }
+      ],
+      "environment": [
+        { "name": "REDIS_HOST", "value": "axis-banking-redis.abc123.0001.aps1.cache.amazonaws.com" },
+        { "name": "EUREKA_CLIENT_SERVICEURL_DEFAULTZONE", "value": "http://eureka.axisbanking.internal:8070/eureka/" },
+        { "name": "AWS_REGION", "value": "ap-south-1" }
+      ],
+      "secrets": [
+        { "name": "JWT_SECRET", "valueFrom": "arn:aws:secretsmanager:ap-south-1:ACCOUNT_ID:secret:axis-banking/jwt-secret" },
+        { "name": "REDIS_PASSWORD", "valueFrom": "arn:aws:secretsmanager:ap-south-1:ACCOUNT_ID:secret:axis-banking/redis-password" }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/axis-banking/api-gateway",
+          "awslogs-region": "ap-south-1",
+          "awslogs-stream-prefix": "ecs"
+        }
+      },
+      "healthCheck": {
+        "command": ["CMD-SHELL", "wget -qO- http://localhost:8072/actuator/health || exit 1"],
+        "interval": 30,
+        "timeout": 10,
+        "retries": 3,
+        "startPeriod": 60
+      }
+    }
+  ]
+}

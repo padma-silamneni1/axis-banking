@@ -4,29 +4,81 @@ server:
 spring:
   application:
     name: api-gateway
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
   cloud:
     gateway:
       discovery:
         locator:
           enabled: true
           lower-case-service-id: true
+      default-filters:
+        - name: JwtAuthGatewayFilter
+        - name: RequestRateLimiter
+          args:
+            redis-rate-limiter.replenishRate: 10
+            redis-rate-limiter.burstCapacity: 20
+            redis-rate-limiter.requestedTokens: 1
+            key-resolver: "#{@userKeyResolver}"
+        - name: Retry
+          args:
+            retries: 3
+            statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE
+            methods: GET
+            backoff:
+              firstBackoff: 100ms
+              maxBackoff: 500ms
+              factor: 2
       routes:
+        - id: auth-service
+          uri: lb://AUTH-SERVICE
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 5
+                redis-rate-limiter.burstCapacity: 10
+                key-resolver: "#{@userKeyResolver}"
         - id: accounts-service
           uri: lb://ACCOUNTS-SERVICE
           predicates:
-            - Path=/api/accounts/**
+            - Path=/api/accounts/**,/api/customers/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: accountsCircuitBreaker
+                fallbackUri: forward:/fallback/accounts
         - id: deposits-service
           uri: lb://DEPOSITS-SERVICE
           predicates:
             - Path=/api/deposits/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: depositsCircuitBreaker
+                fallbackUri: forward:/fallback/deposits
         - id: cards-service
           uri: lb://CARDS-SERVICE
           predicates:
             - Path=/api/cards/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: cardsCircuitBreaker
+                fallbackUri: forward:/fallback/cards
         - id: loans-service
           uri: lb://LOANS-SERVICE
           predicates:
             - Path=/api/loans/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: loansCircuitBreaker
+                fallbackUri: forward:/fallback/loans
         - id: investments-service
           uri: lb://INVESTMENTS-SERVICE
           predicates:
@@ -39,6 +91,14 @@ spring:
           uri: lb://PAYMENTS-SERVICE
           predicates:
             - Path=/api/payments/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: paymentsCircuitBreaker
+                fallbackUri: forward:/fallback/payments
+
+jwt:
+  secret: ${JWT_SECRET:YXhpc2JhbmtpbmdwbGF0Zm9ybXNlY3JldGtleWZvcmp3dHRva2VuZ2VuZXJhdGlvbjIwMjQ=}
 
 eureka:
   instance:
@@ -52,3 +112,29 @@ management:
     web:
       exposure:
         include: "*"
+  endpoint:
+    gateway:
+      enabled: true
+
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10000
+        permittedNumberOfCallsInHalfOpenState: 3
+        slidingWindowType: COUNT_BASED
+  timelimiter:
+    configs:
+      default:
+        timeoutDuration: 3s
+
+cloud:
+  aws:
+    region:
+      static: ${AWS_REGION:ap-south-1}
+
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG

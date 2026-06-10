@@ -1,27 +1,38 @@
 package com.axisbanking.deposits.service.impl;
 
+import com.axisbanking.common.event.EventPublisher;
+import com.axisbanking.common.event.EventType;
+import com.axisbanking.common.event.KafkaTopics;
 import com.axisbanking.deposits.dto.DepositDto;
 import com.axisbanking.deposits.exception.ResourceNotFoundException;
 import com.axisbanking.deposits.model.*;
 import com.axisbanking.deposits.repository.DepositRepository;
 import com.axisbanking.deposits.service.DepositService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class DepositServiceImpl implements DepositService {
 
     private final DepositRepository depositRepository;
+    private final EventPublisher eventPublisher;
 
     @Override
+    @CacheEvict(value = "depositsByCustomer", allEntries = true)
     public DepositDto createDeposit(DepositDto dto) {
         DepositType type = DepositType.valueOf(dto.getDepositType());
 
@@ -46,10 +57,22 @@ public class DepositServiceImpl implements DepositService {
                 .build();
 
         Deposit saved = depositRepository.save(deposit);
+
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("depositNumber", saved.getDepositNumber());
+        payload.put("customerId", saved.getCustomerId());
+        payload.put("depositType", type.name());
+        payload.put("principalAmount", saved.getPrincipalAmount());
+        payload.put("maturityAmount", saved.getMaturityAmount());
+        eventPublisher.publish(KafkaTopics.DEPOSIT_EVENTS, EventType.DEPOSIT_CREATED,
+                saved.getId().toString(), "Deposit", "CREATE", payload);
+
+        log.info("Deposit created: {} type: {} amount: {}", saved.getDepositNumber(), type, saved.getPrincipalAmount());
         return mapToDto(saved);
     }
 
     @Override
+    @Cacheable(value = "deposits", key = "#id")
     public DepositDto getDepositById(Long id) {
         Deposit deposit = depositRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Deposit", "id", id.toString()));
@@ -57,6 +80,7 @@ public class DepositServiceImpl implements DepositService {
     }
 
     @Override
+    @Cacheable(value = "deposits", key = "'num:' + #depositNumber")
     public DepositDto getDepositByNumber(String depositNumber) {
         Deposit deposit = depositRepository.findByDepositNumber(depositNumber)
                 .orElseThrow(() -> new ResourceNotFoundException("Deposit", "depositNumber", depositNumber));
@@ -64,6 +88,7 @@ public class DepositServiceImpl implements DepositService {
     }
 
     @Override
+    @Cacheable(value = "depositsByCustomer", key = "#customerId")
     public List<DepositDto> getDepositsByCustomerId(Long customerId) {
         return depositRepository.findByCustomerId(customerId).stream()
                 .map(this::mapToDto).collect(Collectors.toList());
@@ -76,14 +101,24 @@ public class DepositServiceImpl implements DepositService {
     }
 
     @Override
+    @CacheEvict(value = {"deposits", "depositsByCustomer"}, allEntries = true)
     public DepositDto closeDeposit(Long id) {
         Deposit deposit = depositRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Deposit", "id", id.toString()));
         deposit.setStatus(DepositStatus.PREMATURE_CLOSED);
-        return mapToDto(depositRepository.save(deposit));
+        Deposit saved = depositRepository.save(deposit);
+
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("depositNumber", saved.getDepositNumber());
+        payload.put("status", "PREMATURE_CLOSED");
+        eventPublisher.publish(KafkaTopics.DEPOSIT_EVENTS, EventType.DEPOSIT_CLOSED,
+                id.toString(), "Deposit", "CLOSE", payload);
+
+        return mapToDto(saved);
     }
 
     @Override
+    @CacheEvict(value = {"deposits", "depositsByCustomer"}, allEntries = true)
     public void deleteDeposit(Long id) {
         Deposit deposit = depositRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Deposit", "id", id.toString()));
@@ -115,7 +150,8 @@ public class DepositServiceImpl implements DepositService {
                 .depositType(d.getDepositType().name()).principalAmount(d.getPrincipalAmount())
                 .interestRate(d.getInterestRate()).tenureMonths(d.getTenureMonths())
                 .maturityAmount(d.getMaturityAmount()).startDate(d.getStartDate())
-                .maturityDate(d.getMaturityDate()).monthlyInstallment(d.getMonthlyInstallment())
+                .maturityDate(d.getMaturityDate())
+                .monthlyInstallment(d.getMonthlyInstallment())
                 .status(d.getStatus().name()).build();
     }
 }

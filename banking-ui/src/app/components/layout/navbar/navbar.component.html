@@ -4,6 +4,8 @@
     <span class="brand-text">Banking Platform</span>
   </div>
   <div class="navbar-right">
-    <span class="welcome-text">Welcome, Admin</span>
+    <span class="welcome-text">Welcome, {{ (authService.currentUser$ | async)?.username || 'User' }}</span>
+    <span class="role-badge">{{ (authService.currentUser$ | async)?.role || '' }}</span>
+    <button class="logout-btn" (click)="logout()">Logout</button>
   </div>
 </nav>
