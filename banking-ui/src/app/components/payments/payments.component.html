@@ -1,0 +1,39 @@
+<div class="page-container">
+  <h1 class="page-title">Payments & Transfers</h1>
+  <div class="section">
+    <h2>Initiate Payment</h2>
+    <form (ngSubmit)="initiatePayment()" class="form-grid">
+      <input [(ngModel)]="newPayment.customerId" name="customerId" placeholder="Customer ID" type="number" required />
+      <input [(ngModel)]="newPayment.fromAccount" name="from" placeholder="From Account" required />
+      <input [(ngModel)]="newPayment.toAccount" name="to" placeholder="To Account / UPI ID" required />
+      <select [(ngModel)]="newPayment.paymentType" name="type">
+        <option value="UPI">UPI</option>
+        <option value="NEFT">NEFT</option>
+        <option value="RTGS">RTGS</option>
+        <option value="IMPS">IMPS</option>
+        <option value="FUND_TRANSFER">Fund Transfer</option>
+        <option value="BILL_PAYMENT">Bill Payment</option>
+      </select>
+      <input [(ngModel)]="newPayment.amount" name="amount" placeholder="Amount" type="number" required />
+      <input [(ngModel)]="newPayment.remarks" name="remarks" placeholder="Remarks" />
+      <button type="submit" class="btn-primary">Send Payment</button>
+    </form>
+
+    <table class="data-table">
+      <thead><tr><th>Transaction ID</th><th>Type</th><th>From</th><th>To</th><th>Amount</th><th>Status</th><th>Date</th></tr></thead>
+      <tbody>
+        @for (p of payments; track p.id) {
+          <tr>
+            <td>{{ p.transactionId }}</td>
+            <td><span class="badge">{{ p.paymentType }}</span></td>
+            <td>{{ p.fromAccount }}</td>
+            <td>{{ p.toAccount }}</td>
+            <td class="amount">{{ p.amount | currency:'INR' }}</td>
+            <td><span class="status" [class]="p.status?.toLowerCase()">{{ p.status }}</span></td>
+            <td>{{ p.transactionDate }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>

@@ -1,0 +1,81 @@
+<div class="page-container">
+  <h1 class="page-title">Accounts Management</h1>
+
+  <div class="tabs">
+    <button [class.active]="activeTab === 'accounts'" (click)="activeTab = 'accounts'">Accounts</button>
+    <button [class.active]="activeTab === 'customers'" (click)="activeTab = 'customers'">Customers</button>
+  </div>
+
+  @if (activeTab === 'customers') {
+    <div class="section">
+      <h2>Create Customer</h2>
+      <form (ngSubmit)="createCustomer()" class="form-grid">
+        <input [(ngModel)]="newCustomer.name" name="name" placeholder="Full Name" required />
+        <input [(ngModel)]="newCustomer.email" name="email" placeholder="Email" type="email" required />
+        <input [(ngModel)]="newCustomer.mobileNumber" name="mobile" placeholder="Mobile Number" required />
+        <input [(ngModel)]="newCustomer.panNumber" name="pan" placeholder="PAN Number" />
+        <input [(ngModel)]="newCustomer.address" name="address" placeholder="Address" />
+        <button type="submit" class="btn-primary">Create Customer</button>
+      </form>
+
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>ID</th><th>Name</th><th>Email</th><th>Mobile</th><th>PAN</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (customer of customers; track customer.id) {
+            <tr>
+              <td>{{ customer.id }}</td>
+              <td>{{ customer.name }}</td>
+              <td>{{ customer.email }}</td>
+              <td>{{ customer.mobileNumber }}</td>
+              <td>{{ customer.panNumber }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  @if (activeTab === 'accounts') {
+    <div class="section">
+      <h2>Open New Account</h2>
+      <form (ngSubmit)="createAccount()" class="form-grid">
+        <select [(ngModel)]="newAccount.accountType" name="type">
+          <option value="SAVINGS">Savings</option>
+          <option value="CURRENT">Current</option>
+          <option value="SALARY">Salary</option>
+          <option value="NRI">NRI</option>
+        </select>
+        <input [(ngModel)]="newAccount.branchCode" name="branch" placeholder="Branch Code" required />
+        <input [(ngModel)]="newAccount.customerId" name="customerId" placeholder="Customer ID" type="number" required />
+        <button type="submit" class="btn-primary">Open Account</button>
+      </form>
+
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Account Number</th><th>Type</th><th>Branch</th><th>IFSC</th><th>Balance</th><th>Status</th><th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (account of accounts; track account.id) {
+            <tr>
+              <td>{{ account.accountNumber }}</td>
+              <td><span class="badge">{{ account.accountType }}</span></td>
+              <td>{{ account.branchCode }}</td>
+              <td>{{ account.ifscCode }}</td>
+              <td class="amount">{{ account.balance | currency:'INR' }}</td>
+              <td><span class="status" [class]="account.status?.toLowerCase()">{{ account.status }}</span></td>
+              <td>
+                <button class="btn-danger btn-sm" (click)="deleteAccount(account.id!)">Delete</button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>

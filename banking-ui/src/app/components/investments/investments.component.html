@@ -1,0 +1,40 @@
+<div class="page-container">
+  <h1 class="page-title">Investments Management</h1>
+  <div class="section">
+    <h2>New Investment</h2>
+    <form (ngSubmit)="createInvestment()" class="form-grid">
+      <input [(ngModel)]="newInvestment.customerId" name="customerId" placeholder="Customer ID" type="number" required />
+      <select [(ngModel)]="newInvestment.investmentType" name="type">
+        <option value="MUTUAL_FUND">Mutual Fund</option>
+        <option value="SIP">SIP</option>
+        <option value="STOCKS">Stocks</option>
+        <option value="BONDS">Bonds</option>
+        <option value="PPF">PPF</option>
+        <option value="NPS">NPS</option>
+      </select>
+      <input [(ngModel)]="newInvestment.schemeName" name="scheme" placeholder="Scheme Name" required />
+      <input [(ngModel)]="newInvestment.investedAmount" name="amount" placeholder="Amount" type="number" required />
+      <button type="submit" class="btn-primary">Invest</button>
+    </form>
+
+    <table class="data-table">
+      <thead><tr><th>Inv No</th><th>Type</th><th>Scheme</th><th>Invested</th><th>Current Value</th><th>Units</th><th>Status</th><th>Actions</th></tr></thead>
+      <tbody>
+        @for (i of investments; track i.id) {
+          <tr>
+            <td>{{ i.investmentNumber }}</td>
+            <td><span class="badge">{{ i.investmentType }}</span></td>
+            <td>{{ i.schemeName }}</td>
+            <td class="amount">{{ i.investedAmount | currency:'INR' }}</td>
+            <td class="amount">{{ i.currentValue | currency:'INR' }}</td>
+            <td>{{ i.units }}</td>
+            <td><span class="status" [class]="i.status?.toLowerCase()">{{ i.status }}</span></td>
+            <td>
+              @if (i.status === 'ACTIVE') { <button class="btn-danger btn-sm" (click)="redeem(i.id!)">Redeem</button> }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>

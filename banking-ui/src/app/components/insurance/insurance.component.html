@@ -1,0 +1,41 @@
+<div class="page-container">
+  <h1 class="page-title">Insurance Management</h1>
+  <div class="section">
+    <h2>New Insurance Policy</h2>
+    <form (ngSubmit)="createPolicy()" class="form-grid">
+      <input [(ngModel)]="newPolicy.customerId" name="customerId" placeholder="Customer ID" type="number" required />
+      <select [(ngModel)]="newPolicy.insuranceType" name="type">
+        <option value="LIFE_INSURANCE">Life Insurance</option>
+        <option value="HEALTH_INSURANCE">Health Insurance</option>
+        <option value="VEHICLE_INSURANCE">Vehicle Insurance</option>
+        <option value="HOME_INSURANCE">Home Insurance</option>
+        <option value="TRAVEL_INSURANCE">Travel Insurance</option>
+      </select>
+      <input [(ngModel)]="newPolicy.policyName" name="name" placeholder="Policy Name" required />
+      <input [(ngModel)]="newPolicy.sumAssured" name="sum" placeholder="Sum Assured" type="number" required />
+      <input [(ngModel)]="newPolicy.premiumAmount" name="premium" placeholder="Premium Amount" type="number" required />
+      <button type="submit" class="btn-primary">Create Policy</button>
+    </form>
+
+    <table class="data-table">
+      <thead><tr><th>Policy No</th><th>Type</th><th>Name</th><th>Sum Assured</th><th>Premium</th><th>Start</th><th>End</th><th>Status</th><th>Actions</th></tr></thead>
+      <tbody>
+        @for (p of policies; track p.id) {
+          <tr>
+            <td>{{ p.policyNumber }}</td>
+            <td><span class="badge">{{ p.insuranceType }}</span></td>
+            <td>{{ p.policyName }}</td>
+            <td class="amount">{{ p.sumAssured | currency:'INR' }}</td>
+            <td class="amount">{{ p.premiumAmount | currency:'INR' }}</td>
+            <td>{{ p.startDate }}</td>
+            <td>{{ p.endDate }}</td>
+            <td><span class="status" [class]="p.status?.toLowerCase()">{{ p.status }}</span></td>
+            <td>
+              @if (p.status === 'ACTIVE') { <button class="btn-danger btn-sm" (click)="cancelPolicy(p.id!)">Cancel</button> }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>

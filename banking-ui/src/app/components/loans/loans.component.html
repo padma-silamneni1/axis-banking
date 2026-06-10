@@ -1,0 +1,41 @@
+<div class="page-container">
+  <h1 class="page-title">Loans Management</h1>
+  <div class="section">
+    <h2>Apply for Loan</h2>
+    <form (ngSubmit)="applyForLoan()" class="form-grid">
+      <input [(ngModel)]="newLoan.customerId" name="customerId" placeholder="Customer ID" type="number" required />
+      <select [(ngModel)]="newLoan.loanType" name="type">
+        <option value="HOME_LOAN">Home Loan</option>
+        <option value="PERSONAL_LOAN">Personal Loan</option>
+        <option value="AUTO_LOAN">Auto Loan</option>
+        <option value="EDUCATION_LOAN">Education Loan</option>
+        <option value="GOLD_LOAN">Gold Loan</option>
+        <option value="BUSINESS_LOAN">Business Loan</option>
+      </select>
+      <input [(ngModel)]="newLoan.loanAmount" name="amount" placeholder="Loan Amount" type="number" required />
+      <input [(ngModel)]="newLoan.tenureMonths" name="tenure" placeholder="Tenure (months)" type="number" required />
+      <button type="submit" class="btn-primary">Apply</button>
+    </form>
+
+    <table class="data-table">
+      <thead><tr><th>Loan No</th><th>Type</th><th>Amount</th><th>Interest</th><th>EMI</th><th>Outstanding</th><th>Status</th><th>Actions</th></tr></thead>
+      <tbody>
+        @for (l of loans; track l.id) {
+          <tr>
+            <td>{{ l.loanNumber }}</td>
+            <td><span class="badge">{{ l.loanType }}</span></td>
+            <td class="amount">{{ l.loanAmount | currency:'INR' }}</td>
+            <td>{{ l.interestRate }}%</td>
+            <td class="amount">{{ l.emiAmount | currency:'INR' }}</td>
+            <td class="amount">{{ l.outstandingAmount | currency:'INR' }}</td>
+            <td><span class="status" [class]="l.status?.toLowerCase()">{{ l.status }}</span></td>
+            <td>
+              @if (l.status === 'APPLIED') { <button class="btn-success" (click)="approveLoan(l.id!)">Approve</button> }
+              @if (l.status === 'APPROVED' || l.status === 'ACTIVE') { <button class="btn-danger btn-sm" (click)="closeLoan(l.id!)">Close</button> }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>

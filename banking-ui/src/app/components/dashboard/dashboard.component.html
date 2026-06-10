@@ -1,0 +1,35 @@
+<div class="dashboard">
+  <h1 class="page-title">Welcome to Axis Banking Platform</h1>
+  <p class="subtitle">Manage all your banking services from one place</p>
+
+  <div class="services-grid">
+    @for (service of services; track service.route) {
+      <a [routerLink]="service.route" class="service-card" [style.border-top-color]="service.color">
+        <div class="card-icon" [style.color]="service.color">
+          <span class="material-icon">{{ service.icon }}</span>
+        </div>
+        <h3>{{ service.title }}</h3>
+        <p>{{ service.description }}</p>
+      </a>
+    }
+  </div>
+
+  <div class="quick-stats">
+    <div class="stat-card">
+      <h4>Total Customers</h4>
+      <span class="stat-value">10,245</span>
+    </div>
+    <div class="stat-card">
+      <h4>Active Accounts</h4>
+      <span class="stat-value">25,678</span>
+    </div>
+    <div class="stat-card">
+      <h4>Today's Transactions</h4>
+      <span class="stat-value">1,892</span>
+    </div>
+    <div class="stat-card">
+      <h4>Total Deposits</h4>
+      <span class="stat-value">Rs. 45.2 Cr</span>
+    </div>
+  </div>
+</div>
